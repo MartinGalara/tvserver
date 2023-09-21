@@ -182,8 +182,6 @@ const amTeamViewer = async (devices) => {
       }
     }
 
-    console.log(devicesToUpdate)
-
     // Realizar solicitudes axios para actualizar dispositivos en devicesToUpdate
     for (const device of devicesToUpdate) {
       // Verificar si tvalias contiene 6 símbolos "|"
