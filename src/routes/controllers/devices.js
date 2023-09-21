@@ -119,99 +119,102 @@ router.post('/', async (req, res) => {
 });
 
 const amTeamViewer = async (devices) => {
-    try {
-      const bearerToken = process.env.TEAMVIEWER_BEARER_TOKEN;
-  
-      const options = {
-        method: 'get',
-        url: 'https://webapi.teamviewer.com/api/v1/devices?full_list=true',
+  try {
+    const bearerToken = process.env.TEAMVIEWER_BEARER_TOKEN;
+
+    const options = {
+      method: 'get',
+      url: 'https://webapi.teamviewer.com/api/v1/devices?full_list=true',
+      headers: {
+        'Authorization': `Bearer ${bearerToken}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const response = await axios(options);
+    const tvDevices = response.data.devices;
+
+    const devicesToCreate = [];
+    const devicesToUpdate = [];
+
+    // Crear un conjunto (Set) de objetos de tvDevices usando teamviewer_id como clave
+    const tvDevicesMap = new Map(tvDevices.map(device => [device.teamviewer_id, device]));
+
+    for (const device of devices) {
+      // Convertir el teamviewer_id en devices a un número entero
+      const deviceTeamViewerId = parseInt(device.teamviewer_id);
+
+      if (!isNaN(deviceTeamViewerId) && !tvDevicesMap.has(deviceTeamViewerId)) {
+        // El dispositivo no se encuentra en tvDevices, así que lo agregamos a devicesToCreate
+        devicesToCreate.push(device);
+      } else {
+        // El dispositivo se encuentra en tvDevices, así que lo agregamos a devicesToUpdate
+        const tvDevice = tvDevicesMap.get(deviceTeamViewerId);
+        // Agregar la propiedad device_id al dispositivo que se actualizará
+        device.device_id = tvDevice.device_id;
+        // Agregar la propiedad aliasFromTV al dispositivo que se actualizará
+        device.aliasFromTV = tvDevice.alias;
+        devicesToUpdate.push(device);
+      }
+    }
+
+    // Realizar solicitudes axios para crear dispositivos en devicesToCreate
+    for (const device of devicesToCreate) {
+      const createDeviceOptions = {
+        method: 'post',
+        url: 'https://webapi.teamviewer.com/api/v1/devices',
         headers: {
           'Authorization': `Bearer ${bearerToken}`,
           'Content-Type': 'application/json'
+        },
+        data: {
+          alias: device.tvalias,
+          teamviewer_id: parseInt(device.teamviewer_id),
+          remotecontrol_id: 'r' + device.teamviewer_id,
+          groupid: 'g871212'
         }
       };
-  
-      const response = await axios(options);
-      const tvDevices = response.data.devices;
-  
-      const devicesToCreate = [];
-      const devicesToUpdate = [];
-  
-      // Crear un conjunto (Set) de teamviewer_ids de tvDevices para facilitar la búsqueda
-      const tvDevicesMap = new Map(tvDevices.map(device => [device.teamviewer_id, device.device_id]));
-  
-      for (const device of devices) {
-        // Convertir el teamviewer_id en devices a un número entero
-        const deviceTeamViewerId = parseInt(device.teamviewer_id);
-  
-        if (!isNaN(deviceTeamViewerId) && !tvDevicesMap.has(deviceTeamViewerId)) {
-          // El dispositivo no se encuentra en tvDevices, así que lo agregamos a devicesToCreate
-          devicesToCreate.push(device);
-        } else {
-          // El dispositivo se encuentra en tvDevices, así que lo agregamos a devicesToUpdate
-          const tvDeviceId = tvDevicesMap.get(deviceTeamViewerId);
-          // Agregar la propiedad device_id al dispositivo que se actualizará
-          device.device_id = tvDeviceId;
-          devicesToUpdate.push(device);
-        }
-      }
 
-       // Realizar solicitudes axios para crear dispositivos en devicesToCreate
-    for (const device of devicesToCreate) {
-        const createDeviceOptions = {
-          method: 'post',
-          url: 'https://webapi.teamviewer.com/api/v1/devices',
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`,
-            'Content-Type': 'application/json'
-          },
-          data: {
-            alias: device.tvalias,
-            teamviewer_id: parseInt(device.teamviewer_id),
-            remotecontrol_id: 'r' + device.teamviewer_id,
-            groupid: 'g871212'
-          }
-        };
-  
-        try {
-          await axios(createDeviceOptions);
-        } catch (createError) {
-          console.error('Error al crear el dispositivo:', createError);
-        }
+      try {
+        await axios(createDeviceOptions);
+      } catch (createError) {
+        console.error('Error al crear el dispositivo:', createError);
       }
-
-      // Realizar solicitudes axios para actualizar dispositivos en devicesToUpdate
-      for (const device of devicesToUpdate) {
-        // Verificar si tvalias contiene 6 símbolos "|"
-        if (device.tvalias.split('|').length === 7) {
-          console.log(device)
-          console.log(`El dispositivo con tvalias '${device.tvalias}' tiene 6 símbolos "|". Se omitirá.`);
-          continue; // Salta al siguiente dispositivo
-        }
-      
-        const updateDeviceOptions = {
-          method: 'put',
-          url: `https://webapi.teamviewer.com/api/v1/devices/${device.device_id}`,
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`,
-            'Content-Type': 'application/json'
-          },
-          data: {
-            alias: device.tvalias,
-          }
-        };
-      
-        try {
-          await axios(updateDeviceOptions);
-        } catch (updateError) {
-          console.error('Error al actualizar el dispositivo:', updateError);
-        }
-      }
-
-    } catch (error) {
-      console.error('Error al hacer la solicitud a TeamViewer:', error);
     }
+
+    console.log(devicesToUpdate)
+
+    // Realizar solicitudes axios para actualizar dispositivos en devicesToUpdate
+    for (const device of devicesToUpdate) {
+      // Verificar si tvalias contiene 6 símbolos "|"
+      if (device.tvalias.split('|').length === 7) {
+        console.log(`El dispositivo con tvalias '${device.tvalias}' tiene 6 símbolos "|". Se omitirá.`);
+        continue; // Salta al siguiente dispositivo
+      }
+
+      const updateDeviceOptions = {
+        method: 'put',
+        url: `https://webapi.teamviewer.com/api/v1/devices/${device.device_id}`,
+        headers: {
+          'Authorization': `Bearer ${bearerToken}`,
+          'Content-Type': 'application/json'
+        },
+        data: {
+          alias: device.tvalias,
+        }
+      };
+
+      try {
+        await axios(updateDeviceOptions);
+      } catch (updateError) {
+        console.error('Error al actualizar el dispositivo:', updateError);
+      }
+    }
+  } catch (error) {
+    console.error('Error al hacer la solicitud a TeamViewer:', error);
   }
+};
+
 
   const setBandera = (bandera) => {
 
