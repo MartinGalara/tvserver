@@ -187,8 +187,8 @@ const amTeamViewer = async (devices) => {
     // Realizar solicitudes axios para actualizar dispositivos en devicesToUpdate
     for (const device of devicesToUpdate) {
       // Verificar si tvalias contiene 6 símbolos "|"
-      if (device.tvalias.split('|').length === 7) {
-        console.log(`El dispositivo con tvalias '${device.tvalias}' tiene 6 símbolos "|". Se omitirá.`);
+      if (device.aliasFromTV.split('|').length === 7) {
+        console.log(`El dispositivo con tvalias '${device.aliasFromTV}' tiene 6 símbolos "|". Se omitirá.`);
         continue; // Salta al siguiente dispositivo
       }
 
