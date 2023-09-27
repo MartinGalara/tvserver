@@ -48,7 +48,20 @@ router.get('/', async (req, res) => {
         };
 
         formattedDevice.clientId = formattedDevice.bandera.substring(0, 2) + formattedDevice.identificador;
-        formattedDevice.alias = formattedDevice.area + formattedDevice.teamviewer_id.toString()
+
+        let aliasSubString = ""
+        switch (formattedDevice.area) {
+          case "P": aliasSubString = "Playa"
+          case "N": aliasSubString = "Nochero"
+          case "R": aliasSubString = "Repuestos"
+          case "B": aliasSubString = "Boxes"
+          case "L": aliasSubString = "Lavadero"
+          case "A": aliasSubString = "Administracion"
+          case "T": aliasSubString = "Tienda"
+          default: aliasSubString = "Otro"
+        }
+
+        formattedDevice.alias = aliasSubString + " | " + formattedDevice.extras
 
         formattedDevices.push(formattedDevice);
       });
@@ -154,7 +167,8 @@ const amTeamViewer = async (devices) => {
         device.device_id = tvDevice.device_id;
         // Agregar la propiedad aliasFromTV al dispositivo que se actualizará
         device.aliasFromTV = tvDevice.alias;
-        devicesToUpdate.push(device);
+        //devicesToUpdate.push(device);                **COMENTADO XQ NO QUEREMOS MODIFICAR YA EXISTENTES, EN UN FUTURO DESCOMENTAR ESTO PARA EDITAR EN VEZ DE CREAR
+        devicesToCreate.push(device);
       }
     }
 
