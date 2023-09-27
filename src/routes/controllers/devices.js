@@ -172,6 +172,8 @@ const amTeamViewer = async (devices) => {
       }
     }
 
+    console.log(devicesToCreate)
+
     // Realizar solicitudes axios para crear dispositivos en devicesToCreate
     for (const device of devicesToCreate) {
       const createDeviceOptions = {
