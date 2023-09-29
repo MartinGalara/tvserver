@@ -167,12 +167,10 @@ const amTeamViewer = async (devices) => {
         device.device_id = tvDevice.device_id;
         // Agregar la propiedad aliasFromTV al dispositivo que se actualizará
         device.aliasFromTV = tvDevice.alias;
-        //devicesToUpdate.push(device);                **COMENTADO XQ NO QUEREMOS MODIFICAR YA EXISTENTES, EN UN FUTURO DESCOMENTAR ESTO PARA EDITAR EN VEZ DE CREAR
-        devicesToCreate.push(device);
+        device.descFromTV = tvDevice.description;
+        devicesToUpdate.push(device);               
       }
     }
-
-    console.log(devicesToCreate)
 
     // Realizar solicitudes axios para crear dispositivos en devicesToCreate
     for (const device of devicesToCreate) {
@@ -206,6 +204,8 @@ const amTeamViewer = async (devices) => {
         continue; // Salta al siguiente dispositivo
       }
 
+      console.log(device)
+
       const updateDeviceOptions = {
         method: 'put',
         url: `https://webapi.teamviewer.com/api/v1/devices/${device.device_id}`,
@@ -215,6 +215,7 @@ const amTeamViewer = async (devices) => {
         },
         data: {
           alias: device.tvalias,
+          description: device.descFromTV + " | " + device.aliasFromTV
         }
       };
 
