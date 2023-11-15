@@ -58,6 +58,8 @@ router.get('/', async (req, res) => {
           case "L": aliasSubString = "Lavadero"
           case "A": aliasSubString = "Administracion"
           case "T": aliasSubString = "Tienda"
+          case "S": aliasSubString = "Server"
+          case "V": aliasSubString = "Virtual"
           default: aliasSubString = "Otro"
         }
 
